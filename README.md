@@ -1,5 +1,9 @@
 # csc396_project
 
+PERC Dataset
+Ponnarassery-, Sreeja (2017), “Poem Emotion Recognition Corpus (PERC)”, Mendeley Data, V1, doi: 10.17632/n9vbc8g9cx.1
+
+Huggingface Dataset
 @misc{sheng2020investigating,
   archiveprefix = {arXiv},
   author = {Emily Sheng and David Uthus},
