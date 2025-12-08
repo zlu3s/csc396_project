@@ -1,0 +1,19 @@
+Roberta Transformer/roberta-base-sentiments/checkpoints-*/
+
+*.safetensors
+*.pt
+*.bin
+
+*.json
+training_args.bin
+
+__pycache__/
+*.pyo
+*.pyd
+
+*.log
+*.tmp
+*.swp
+
+.ipynb_checkpoints/
+
