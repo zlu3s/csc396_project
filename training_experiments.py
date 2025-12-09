@@ -1,9 +1,12 @@
 import os
 import torch
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
+from sklearn.metrics import f1_score
 
 from transformers import RobertaTokenizer, RobertaForSequenceClassification
 
@@ -18,8 +21,8 @@ TEXT_COL = "Poem"
 LABEL_COL = "label"
 
 MAX_LEN = 256
-BATCH_SIZE = 8
-EPOCHS = 3
+BATCH_SIZE = 16
+EPOCHS = 15
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Running on device: {DEVICE}")
@@ -34,6 +37,7 @@ class TextDataset(Dataset):
     """Dataset for training and evaluation."""
     def __init__(self, csv_path):
         df = pd.read_csv(csv_path)
+        df = df.dropna(subset=[TEXT_COL])
         self.texts = df[TEXT_COL].tolist()
         self.labels = df[LABEL_COL].tolist()
 
@@ -65,7 +69,9 @@ def collate_fn(batch, tokenizer):
 # ============================================================
 def evaluate_accuracy(model, loader):
     model.eval()
-    correct, total = 0, 0
+    
+    all_preds = []
+    all_labels = []
 
     with torch.no_grad():
         for input_ids, attention_mask, labels in loader:
@@ -76,11 +82,46 @@ def evaluate_accuracy(model, loader):
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
             preds = torch.argmax(outputs.logits, dim=-1)
 
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
 
-    return correct / total
+    f1 = f1_score(all_labels, all_preds, average='weighted')
+    
+    return f1
 
+# ============================================================
+#               PLOTTING FUNCTION
+# ============================================================
+def plot_history_combined(train_losses, val_f1s, method_name, save_dir):
+    epochs = range(1, len(train_losses) + 1)
+    
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+
+    color_loss = 'tab:blue'
+    ax1.set_xlabel('Epochs')
+    ax1.set_ylabel('Loss', color=color_loss)
+    ax1.plot(epochs, train_losses, 'b-o', label='Training Loss', color=color_loss)
+    ax1.tick_params(axis='y', labelcolor=color_loss)
+    ax1.grid(True, linestyle='--', alpha=0.6)
+
+    ax2 = ax1.twinx() 
+
+    color_f1 = 'tab:red'
+    ax2.set_ylabel('F1 Score', color=color_f1) 
+    ax2.plot(epochs, val_f1s, 'r-s', label='Validation F1', color=color_f1)
+    ax2.tick_params(axis='y', labelcolor=color_f1)
+
+    plt.title(f'{method_name} - Training Metrics Over Epochs')
+    
+    lines = ax1.get_lines() + ax2.get_lines()
+    labels = [line.get_label() for line in lines]
+    ax1.legend(lines, labels, loc='best')
+    
+    fig.tight_layout()
+    plot_path = os.path.join(save_dir, f"{method_name}_metrics_combined.png")
+    plt.savefig(plot_path)
+    plt.close()
+    print(f"Plot saved → {plot_path}")
 
 # ============================================================
 #               TRAINING LOOP (USED BY ALL METHODS)
@@ -96,6 +137,9 @@ def train(model, tokenizer, train_loader, test_loader, lr, save_path, method_nam
     )
 
     print(f"\n========== Training: {method_name} ==========")
+    
+    train_losses = []
+    val_f1s = []
 
     for epoch in range(EPOCHS):
         model.train()
@@ -122,10 +166,15 @@ def train(model, tokenizer, train_loader, test_loader, lr, save_path, method_nam
             pbar.set_postfix({"loss": loss.item()})
 
         avg_loss = epoch_loss / len(train_loader)
-        acc = evaluate_accuracy(model, test_loader)
-        print(f"[{method_name}] Epoch {epoch+1} | Loss: {avg_loss:.4f} | Accuracy: {acc:.4f}")
+        f1 = evaluate_accuracy(model, test_loader)
+        
+        train_losses.append(avg_loss)
+        val_f1s.append(f1)
+        
+        print(f"[{method_name}] Epoch {epoch+1} | Loss: {avg_loss:.4f} | F1-score: {f1:.4f}")
 
-    # save
+    plot_history(train_losses, val_f1s, method_name, save_path)
+
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
     print(f"Model saved → {save_path}")
@@ -189,7 +238,7 @@ def run_all_experiments():
         # Method C: full finetuning
         # --------------------------------------------------
         elif method == "full":
-            lr = 2e-6
+            lr = 2e-5
             for p in model.parameters():
                 p.requires_grad = True
 
@@ -213,7 +262,7 @@ def run_all_experiments():
         # --------------------------------------------------
         # Run training
         # --------------------------------------------------
-        save_dir = f"./results/{method}"
+        save_dir = f"./results_model/{method}"
         os.makedirs(save_dir, exist_ok=True)
 
         train(

@@ -1,5 +1,5 @@
 '''
-baseline model test
+model test
 '''
 
 
@@ -9,11 +9,13 @@ from transformers import RobertaTokenizer, RobertaForSequenceClassification
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 from torch.nn.functional import softmax
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # -------------------------------------------------------
 # 1. Initialization
 # -------------------------------------------------------
-MODEL_DIR = "./roberta-base-sentiments"
+MODEL_DIR = "./results_model/lora"
 CSV_PATH = "datasets/perc_test.csv"
 DATA_COLUMN_NAME = "Poem"
 MAX_LEN = 256                             # chunk length
@@ -175,16 +177,28 @@ if labels and len(predictions) == len(labels):
     # Confusion Matrix
     cm = confusion_matrix(labels, predictions, labels=ALL_LABELS) 
     cm_df = pd.DataFrame(cm, index=TARGET_NAMES, columns=TARGET_NAMES)
+    plt.figure(figsize=(10, 8))
 
-    print("\n**Confusion Matrix**")
-    print(cm_df)
+    sns.heatmap(cm_df, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=TARGET_NAMES, yticklabels=TARGET_NAMES)
+    
+    plt.title('Confusion Matrix')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    
+    base_name = os.path.basename(CVS_PATH)
+    file_name_core = os.path.splitext(base_name)[0]
+    new_file_name = f"{MODEL_DIR}_{file_name_core}_confusion_matrix.png"
+  
+    plt.savefig(new_file_name, dpi=300, bbox_inches='tight')
+    print(f"Confusion matrix heatmap saved as: {new_file_name}")
 
     # Simple Accuracy calculation (keeping it)
     correct = sum([1 if p == y else 0 for p, y in zip(predictions, labels)])
     acc = correct / len(labels)
 
     print("\n**Summary**")
-    print(f"Average accuracy): {acc:.4f}")
+    print(f"Average accuracy: {acc:.4f}")
     print(f"Number of samples: {len(labels)}")
     print("-" * 30)
 else:
@@ -195,6 +209,7 @@ else:
 # -------------------------------------------------------
 # 7. Save Results
 # -------------------------------------------------------
+'''
 output_path = "perc_test_with_predictions.csv"
 dataset.df["prediction"] = predictions
 
@@ -205,3 +220,4 @@ elif not dataset.df.empty and len(dataset.df) == len(labels):
 
 dataset.df.to_csv(output_path, index=False)
 print(f"Prediction saved to: {output_path}")
+'''
