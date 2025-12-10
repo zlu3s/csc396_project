@@ -3,45 +3,19 @@ model test
 '''
 
 import os
-import torch
+
 import pandas as pd
-from transformers import RobertaTokenizer, RobertaForSequenceClassification
-from torch.utils.data import DataLoader, Dataset
+
 from tqdm import tqdm
+from torch.utils.data import DataLoader, Dataset
 from torch.nn.functional import softmax
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# -------------------------------------------------------
-# 1. Initialization
-# -------------------------------------------------------
-MODEL_DIR = "./roberta-base-sentiments"
+MODEL_DIR = ""
 CSV_PATH = "datasets/500songs_test.csv"
 DATA_COLUMN_NAME = "lyrics"
-MAX_LEN = 256                             # chunk length
-STRIDE = 128                              # stride window
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"**Testing**")
-print(f"Model Directory: {MODEL_DIR}")
-print(f"Test Dataset Directory: {CSV_PATH}")
-print(f"Device: {DEVICE}")
-print("-" * 30)
 
-# -------------------------------------------------------
-# 2. Load Model and tokenizer
-# -------------------------------------------------------
-tokenizer = RobertaTokenizer.from_pretrained(MODEL_DIR)
-print("Finished loading Tokenizer..")
-
-model = RobertaForSequenceClassification.from_pretrained(MODEL_DIR)
-model.to(DEVICE)
-model.eval()
-print("Finished loading Model")
-print("-" * 30)
-
-# -------------------------------------------------------
-# 3. Load Dataset
-# -------------------------------------------------------
 class TestTextDataset(Dataset):
     def __init__(self, csv_path):
         print(f"Loading Dataset: {csv_path}...")
@@ -71,60 +45,10 @@ dataset = TestTextDataset(CSV_PATH)
 loader = DataLoader(dataset, batch_size=1, shuffle=False)
 print("-" * 30)
 
-# -------------------------------------------------------
-# 4. Striding Tokenizer
-# -------------------------------------------------------
-def sliding_window_encode(text, tokenizer, max_len=256, stride=128):
-    tokens = tokenizer(
-        text,
-        add_special_tokens=False,
-        return_attention_mask=False,
-    )["input_ids"]
 
-    chunks = []
-    start = 0
-    while start < len(tokens):
-        # [CLS][SEP]
-        end = start + max_len - 2 
-        chunk_tokens = tokens[start:end]
-
-        encoded = tokenizer.prepare_for_model(
-            chunk_tokens,
-            max_length=max_len,
-            truncation=True,
-            padding="max_length",
-            return_tensors="pt"
-        )
-        
-        chunks.append(encoded)
-        start += stride
-
-    return chunks
-# -------------------------------------------------------
-# 5. Model Inference
-# -------------------------------------------------------
 def predict_long_text(text):
-    chunks = sliding_window_encode(text, tokenizer, MAX_LEN, STRIDE)
-    all_logits = []
-
-    with torch.no_grad():
-        for ch in chunks:
-            new_ch = {}
-            for k, v in ch.items():
-                if v.dim() == 1:
-                    new_ch[k] = v.unsqueeze(0).to(DEVICE)
-                else:
-                    new_ch[k] = v.to(DEVICE)
-            
-            outputs = model(**new_ch)
-            all_logits.append(outputs.logits.cpu())
-
-    # Softmax all chuncks
-    all_probs = [softmax(logits, dim=-1) for logits in all_logits]
-    avg_probs = torch.mean(torch.stack(all_probs), dim=0)
-    pred = avg_probs.argmax(dim=-1).item()
     
-    return pred
+    return 1
 
 predictions = []
 labels = []

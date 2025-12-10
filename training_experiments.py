@@ -173,7 +173,7 @@ def train(model, tokenizer, train_loader, test_loader, lr, save_path, method_nam
         
         print(f"[{method_name}] Epoch {epoch+1} | Loss: {avg_loss:.4f} | F1-score: {f1:.4f}")
 
-    plot_history(train_losses, val_f1s, method_name, save_path)
+    plot_history_combined(train_losses, val_f1s, method_name, save_path)
 
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
