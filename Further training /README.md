@@ -40,7 +40,7 @@ Before running the scripts, ensure you have the necessary libraries and data set
 | :--- | :--- | :--- |
 | `training_experiments.py` | **Fine-Tuning Strategies** | Performs comparative training using four distinct fine-tuning methods (`cls_head`, `last_layers`, `full`, `lora`) on the primary poem dataset (`perc_train.csv`). |
 | `experiment_transfer_learning.py` | **Data Mixing Experiment (LoRA)** | Investigates the effect of mixing poem data (100%) with varying ratios (0.0 to 1.0) of lyrics data. Evaluates the resulting model on both poem and lyrics test sets. |
-| `test_model.py` | **Model Inference & Evaluation** | A generic script for evaluating a trained model, specifically designed to handle **long input texts** using a sliding window technique. It generates a classification report and a confusion matrix heatmap. |
+| `test.py` | **Model Inference & Evaluation** | A generic script for evaluating a trained model, specifically designed to handle **long input texts** using a sliding window technique. It generates a classification report and a confusion matrix heatmap. |
 | `test_dumb.py` | **Dumb Baseline Evaluation** | Calculates baseline metrics by simulating a simple classifier that always predicts the same, most frequent class (class 1: 'joy'). Useful for establishing a lower performance bound. |
 | `plot.py` | **Result Visualization** | Generates bar plots from hardcoded performance scores to visually compare the effectiveness of the four fine-tuning strategies (`cls_head`, `last_layers`, `Full`, `Lora`) on the poem and lyrics test sets. |
 
@@ -98,7 +98,7 @@ To evaluate any saved model (e.g., the best model from the `full` method), updat
 3.  Change `CSV_PATH` to your target test set (e.g., `datasets/perc_test.csv` or `datasets/500songs_test.csv`).
 4.  Run the script:
     ```bash
-    python test_model.py
+    python test.py
     ```
 
 #### Baseline Evaluation (`test_dumb.py`)
