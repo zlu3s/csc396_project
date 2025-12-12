@@ -1,16 +1,14 @@
 # Emotion Classification in Creative Text: Domain Adaptation and Fine-Tuning Strategies for RoBERTa on Poetry and Song Lyrics
 ## Repository structure
+```text
 .
 ├── Roberta Transformer/       # Stage 1: Fine-tune RoBERTa on general text   
-
 ├── Further training/          # Stage 2: Further training experiments  
-
 ├── t5_model_implement/        # An experiment of data augmentation with fine-tuned T5 model  
-
 ├── Final_Report.pdf  
-
 └── README.md  
 
+```
 ### Labels Used
 ```python
 labels = ['sad', 'joy', 'love', 'anger', 'fear', 'surprise']
