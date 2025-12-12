@@ -24,10 +24,10 @@ Before running the scripts, ensure you have the necessary libraries and data set
     pip install torch pandas numpy matplotlib scikit-learn transformers peft seaborn tqdm
     ```
 * **Model and Data:**
-    * **Pre-trained Model:** Download and place your base RoBERTa model (e.g., fine-tuned for general sentiment, specified as `roberta-base-sentiments` in the scripts) in a local directory named `./roberta-base-sentiments`.
+    * **Pre-trained Model:** Fine-tune the pre-trained RoBERTa with the code in '../Roberta Transformer'
     * **Datasets:** Ensure the data files are structured as follows:
         ```
-        datasets/
+        data/
         ├── perc_train.csv      # Primary (Poem) training set
         ├── perc_test.csv       # Primary (Poem) test set
         ├── 500songs_train.csv  # Secondary (Lyrics) training set
@@ -120,7 +120,3 @@ python plot.py
 ```
 
   * **Output:** Two bar plots, `poem_performance.png` and `lyrics_performance.png`, will be generated.
-
-<!-- end list -->
-
-```
