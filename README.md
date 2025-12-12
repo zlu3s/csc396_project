@@ -5,7 +5,8 @@
 ├── Roberta Transformer/       # Stage 1: Fine-tune RoBERTa on general text   
 ├── Further training/          # Stage 2: Further training experiments  
 ├── t5_model_implement/        # An experiment of data augmentation with fine-tuned T5 model  
-├── Final_Report.pdf  
+├── Final_Report.pdf
+├── Slides.pdf
 └── README.md  
 
 ```
